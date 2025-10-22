@@ -57,21 +57,28 @@ public class AgileBoardServiceImpl implements AgileBoardService {
 
     @Override
     public CreateAgileBoardResponse register(CreateAgileBoardRequest createAgileBoardRequest) {
-        log.info("accountId: {}", createAgileBoardRequest.getAccountId());
+        log.info("애자일 보드 생성 요청 - accountId: {}, projectId: {}, title: {}", 
+            createAgileBoardRequest.getAccountId(), 
+            createAgileBoardRequest.getProjectId(), 
+            createAgileBoardRequest.getTitle());
+        
         Long accountId = createAgileBoardRequest.getAccountId();
+        Long projectId = createAgileBoardRequest.getProjectId();
+        
+        // projectId 유효성 검사
+        if (projectId == null) {
+            log.error("프로젝트 ID가 null입니다.");
+            throw new IllegalArgumentException("프로젝트 ID가 필요합니다.");
+        }
 
         AccountResponse accountResponse = accountClient.AccountFindById(accountId);
-
         log.info("account: {}", accountResponse.getId());
 
-
         AccountProfileResponse accountProfileResponse = accountProfileClient.AccountProfileFindById(accountId);
-
-
         log.info("account profile: {}", accountProfileResponse);
 
-        Project project = projectRepository.findById(createAgileBoardRequest.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다. projectId: " + projectId));
 
         log.info("account project: {}", accountProfileResponse);
 
