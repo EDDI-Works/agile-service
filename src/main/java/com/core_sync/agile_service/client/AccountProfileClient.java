@@ -16,7 +16,7 @@ public class AccountProfileClient {
     private String accountServiceUrl;
 
     private String getAccountProfileUrl() {
-        return accountServiceUrl + "/account-profile";
+        return accountServiceUrl + "/api/account-profile";
     }
 
     public AccountProfileResponse AccountProfileFindById(Long AccountId) {
