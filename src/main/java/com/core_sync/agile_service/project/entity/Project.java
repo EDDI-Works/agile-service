@@ -29,12 +29,15 @@ public class Project {
     @Column(name = "team_id")
     private Long teamId;
 
+    @Setter
     @Column(name = "github_repository_url")
     private String githubRepositoryUrl;
 
+    @Setter
     @Column(name = "github_repository_name")
     private String githubRepositoryName;
 
+    @Setter
     @Column(name = "github_owner")
     private String githubOwner;
 

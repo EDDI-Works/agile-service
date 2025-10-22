@@ -49,21 +49,34 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public CreateProjectResponse register(CreateProjectRequest createProjectRequest) {
-        log.info("accountId: {}", createProjectRequest.getAccountId());
+        log.info("프로젝트 생성 요청 - accountId: {}, title: {}, teamId: {}", 
+            createProjectRequest.getAccountId(), createProjectRequest.getTitle(), createProjectRequest.getTeamId());
+        
         Long accountId = createProjectRequest.getAccountId();
 
         AccountResponse accountResponse = accountClient.AccountFindById(accountId);
-
         log.info("account: {}", accountResponse.getId());
 
-
         AccountProfileResponse accountProfileResponse = accountProfileClient.AccountProfileFindById(accountId);
-
-
         log.info("account profile: {}", accountProfileResponse);
+        
+        // 중복 프로젝트 체크
+        Long accountProfileId = accountProfileResponse.getAccountProfileId();
+        Optional<Project> existingProject = projectRepository.findByAccountProfileIdAndTitle(
+            accountProfileId, createProjectRequest.getTitle());
+        
+        if (existingProject.isPresent()) {
+            log.warn("이미 존재하는 프로젝트 - title: {}, accountProfileId: {}", 
+                createProjectRequest.getTitle(), accountProfileId);
+            throw new IllegalArgumentException("이미 같은 이름의 프로젝트가 존재합니다.");
+        }
 
-        Project savedProject = projectRepository.save(createProjectRequest.toProject(accountProfileResponse.getAccountProfileId()));
+        Project newProject = createProjectRequest.toProject(accountProfileId);
+        Project savedProject = projectRepository.save(newProject);
+        log.info("프로젝트 생성 완료 - projectId: {}", savedProject.getId());
+        
         return CreateProjectResponse.from(savedProject, createProjectRequest.getTeamId(), accountProfileResponse);
     }
 
@@ -113,25 +126,12 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = maybeProject.get();
         
-        // Reflection을 사용하여 필드 설정 (Setter가 없으므로)
-        try {
-            java.lang.reflect.Field urlField = Project.class.getDeclaredField("githubRepositoryUrl");
-            urlField.setAccessible(true);
-            urlField.set(project, repositoryUrl);
-
-            java.lang.reflect.Field nameField = Project.class.getDeclaredField("githubRepositoryName");
-            nameField.setAccessible(true);
-            nameField.set(project, repositoryName);
-
-            java.lang.reflect.Field ownerField = Project.class.getDeclaredField("githubOwner");
-            ownerField.setAccessible(true);
-            ownerField.set(project, owner);
-
-            projectRepository.save(project);
-        } catch (Exception e) {
-            log.error("GitHub 저장소 연동 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("GitHub 저장소 연동 중 오류가 발생했습니다.", e);
-        }
+        // GitHub 저장소 정보 설정
+        project.setGithubRepositoryUrl(repositoryUrl);
+        project.setGithubRepositoryName(repositoryName);
+        project.setGithubOwner(owner);
+        
+        projectRepository.save(project);
     }
 
     @Override
