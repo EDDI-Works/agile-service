@@ -72,10 +72,15 @@ public class GithubServiceImpl implements GithubService {
 
     @Override
     public List<Map<String, Object>> getCommits(String accessToken, String owner, String repo, int perPage) {
-        log.info("GitHub 커밋 조회 - owner: {}, repo: {}, perPage: {}", owner, repo, perPage);
+        return getCommits(accessToken, owner, repo, 1, perPage);
+    }
+
+    @Override
+    public List<Map<String, Object>> getCommits(String accessToken, String owner, String repo, int page, int perPage) {
+        log.info("GitHub 커밋 조회 - owner: {}, repo: {}, page: {}, perPage: {}", owner, repo, page, perPage);
         
         try {
-            String url = githubApiBaseUrl + "/repos/" + owner + "/" + repo + "/commits?per_page=" + perPage;
+            String url = githubApiBaseUrl + "/repos/" + owner + "/" + repo + "/commits?page=" + page + "&per_page=" + perPage;
             log.info("GitHub API URL: {}", url);
             
             HttpHeaders headers = new HttpHeaders();

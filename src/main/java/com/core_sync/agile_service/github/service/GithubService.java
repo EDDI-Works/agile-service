@@ -8,5 +8,6 @@ import java.util.Map;
 public interface GithubService {
     GithubRepositoryListResponse getRepositories(String accessToken);
     List<Map<String, Object>> getCommits(String accessToken, String owner, String repo, int perPage);
+    List<Map<String, Object>> getCommits(String accessToken, String owner, String repo, int page, int perPage);
     Map<String, Object> getCommitDetail(String accessToken, String owner, String repo, String sha);
 }

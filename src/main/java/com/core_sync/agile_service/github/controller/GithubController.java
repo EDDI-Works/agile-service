@@ -67,10 +67,11 @@ public class GithubController {
             @RequestHeader("Authorization") String token,
             @PathVariable("owner") String owner,
             @PathVariable("repo") String repo,
-            @RequestParam(value = "per_page", defaultValue = "10") int perPage
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "per_page", defaultValue = "22") int perPage
     ) {
         String userToken = token.replace("Bearer ", "").trim();
-        log.info("GitHub 커밋 조회 - owner: {}, repo: {}, perPage: {}", owner, repo, perPage);
+        log.info("GitHub 커밋 조회 - owner: {}, repo: {}, page: {}, perPage: {}", owner, repo, page, perPage);
         
         Long accountId = redisCacheService.getValueByKey(userToken, Long.class);
         
@@ -89,8 +90,19 @@ public class GithubController {
         }
         
         try {
-            List<Map<String, Object>> commits = githubService.getCommits(githubAccessToken, owner, repo, perPage);
-            return ResponseEntity.ok(commits);
+            // page가 1이면 22개, 2 이상이면 10개씩 가져오기
+            int actualPerPage = (page == 1) ? 22 : 10;
+            List<Map<String, Object>> commits = githubService.getCommits(githubAccessToken, owner, repo, page, actualPerPage);
+            
+            // 응답에 페이지 정보 포함
+            Map<String, Object> response = Map.of(
+                "commits", commits,
+                "page", page,
+                "perPage", actualPerPage,
+                "hasMore", commits.size() == actualPerPage  // 요청한 개수만큼 왔으면 더 있을 가능성
+            );
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("GitHub 커밋 조회 실패", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
