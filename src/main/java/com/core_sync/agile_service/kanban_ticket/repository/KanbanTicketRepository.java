@@ -11,7 +11,8 @@ import java.util.List;
 public interface KanbanTicketRepository extends JpaRepository<KanbanTicket, Long> {
     @Query("SELECT kt FROM KanbanTicket kt " +
             "JOIN FETCH kt.agileBoard ab " +
-            "WHERE ab.id = :agileBoardId")
+            "WHERE ab.id = :agileBoardId " +
+            "ORDER BY kt.backlogNumber DESC, kt.createDate DESC")
     Page<KanbanTicket> findAllByAgileBoardId(Long agileBoardId, Pageable pageable);
     
     @Query("SELECT COUNT(kt) FROM KanbanTicket kt WHERE kt.agileBoard.id = :agileBoardId")
