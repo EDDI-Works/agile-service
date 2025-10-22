@@ -26,15 +26,23 @@ public class AccountClient {
     public AccountResponse AccountFindById(Long AccountId) {
         try {
             String url = getAccountUrl() + "/{accountId}";
-            log.info("AccountClient - 요청 URL: {}, accountId: {}", url, AccountId);
+            String fullUrl = accountServiceUrl + "/account/" + AccountId;
+            log.info("AccountClient - 요청 URL 템플릿: {}", url);
+            log.info("AccountClient - 실제 요청 URL: {}", fullUrl);
+            log.info("AccountClient - accountId: {}", AccountId);
+            
             AccountResponse response = restTemplate.getForObject(url, AccountResponse.class, AccountId);
             log.info("AccountClient - 응답: {}", response);
             return response;
         } catch (Exception e) {
             log.error("AccountClient - Account 조회 실패: accountId={}, error={}", AccountId, e.getMessage());
+            log.error("AccountClient - 에러 상세:", e);
+            log.error("AccountClient - Account Service URL: {}", accountServiceUrl);
+            
             // 실패 시 기본 AccountResponse 반환
             AccountResponse fallback = new AccountResponse();
             fallback.setId(AccountId);
+            log.warn("AccountClient - Fallback 응답 사용: {}", fallback);
             return fallback;
         }
     }
